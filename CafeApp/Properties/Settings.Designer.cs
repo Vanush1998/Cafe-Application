@@ -26,22 +26,11 @@ namespace CafeApp.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=ASUS-PC;Initial Catalog=CafeDatabase;Persist Security Info=True;User " +
-            "ID=Ani;Password=0202")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=HP-OMEN;Initial Catalog=CafeDatabase;Persist Security Info=True;User " +
+            "ID=Admin;Password=0202;MultipleActiveResultSets=True")]
         public string CafeDatabaseConnectionString {
             get {
                 return ((string)(this["CafeDatabaseConnectionString"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=ASUS-PC;Initial Catalog=CafeDatabase;Persist Security Info=True;User " +
-            "ID=Admin;Password=0202")]
-        public string CafeDatabaseConnectionString1 {
-            get {
-                return ((string)(this["CafeDatabaseConnectionString1"]));
             }
         }
     }
