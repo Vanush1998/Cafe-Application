@@ -1,0 +1,76 @@
+[
+  {
+    "adminSetterID": 0,
+    "isAdmin": true,
+    "isBlocked": false,
+    "Bill": 8000,
+    "ID": 1,
+    "UserName": "van_voskanyan",
+    "Password": "7@???99<9",
+    "Cash": 70985,
+    "Location": {
+      "Latitude": 41.1159648,
+      "Longitude": 44.285778,
+      "Altitude": "NaN",
+      "HorizontalAccuracy": "NaN",
+      "VerticalAccuracy": "NaN",
+      "Speed": "NaN",
+      "Course": "NaN",
+      "IsUnknown": false
+    },
+    "Favorite": [ "Jazzve" ],
+    "Name": "Vanush",
+    "LastName": "Voskanyan"
+  },
+  {
+    "adminSetterID": 1,
+    "isAdmin": true,
+    "isBlocked": false,
+    "Bill": 0,
+    "ID": 2,
+    "UserName": "anikhachatryan",
+    "Password": "79799777",
+    "Cash": 106400,
+    "Location": {
+      "Latitude": 40.1820773,
+      "Longitude": 44.5146677,
+      "Altitude": "NaN",
+      "HorizontalAccuracy": "NaN",
+      "VerticalAccuracy": "NaN",
+      "Speed": "NaN",
+      "Course": "NaN",
+      "IsUnknown": false
+    },
+    "Favorite": [ "El garden" ],
+    "Name": "Ani",
+    "LastName": "Khachatryan"
+  },
+  {
+    "adminSetterID": 0,
+    "isAdmin": false,
+    "isBlocked": true,
+    "Bill": 0,
+    "ID": 3,
+    "UserName": "pandunts7",
+    "Password": "uhylr@@@@",
+    "Cash": 900,
+    "Location": null,
+    "Favorite": [ "Verona" ],
+    "Name": "Narek",
+    "LastName": "Pandunts"
+  },
+  {
+    "adminSetterID": 0,
+    "isAdmin": false,
+    "isBlocked": false,
+    "Bill": 0,
+    "ID": 4,
+    "UserName": "dianayeghishyan",
+    "Password": "rvsvivr88",
+    "Cash": 2500000,
+    "Location": null,
+    "Favorite": [ "Jazzve" ],
+    "Name": "Diana",
+    "LastName": "Yeghishyan"
+  }
+]
