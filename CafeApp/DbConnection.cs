@@ -9,7 +9,7 @@ namespace CafeApplication
 {
     class DbConnection
     {
-        private static string connectionString = "Data Source=ASUS-PC;Initial Catalog=CafeDatabase;Persist Security Info=True;User ID=Admin;Password=0202";
+        private static string connectionString = "Data Source=HP-OMEN;Initial Catalog=CafeDatabase;MultipleActiveResultSets=true;Persist Security Info=True;User ID=Admin;Password=0202";
         private static SqlConnection connection = null;
        private DbConnection() { }
         public static SqlConnection GetConnection()

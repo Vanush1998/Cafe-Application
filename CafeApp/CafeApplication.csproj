@@ -70,11 +70,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>CafeDatabaseDataSet.xsd</DependentUpon>
     </Compile>
-    <Compile Include="CafeDatabaseDataSet1.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>CafeDatabaseDataSet1.xsd</DependentUpon>
-    </Compile>
     <Compile Include="GeoCode.cs" />
     <Compile Include="Person.cs" />
     <Compile Include="Program.cs" />
@@ -104,19 +99,7 @@
     <None Include="CafeDatabaseDataSet.xss">
       <DependentUpon>CafeDatabaseDataSet.xsd</DependentUpon>
     </None>
-    <None Include="CafeDatabaseDataSet1.xsc">
-      <DependentUpon>CafeDatabaseDataSet1.xsd</DependentUpon>
-    </None>
-    <None Include="CafeDatabaseDataSet1.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>CafeDatabaseDataSet1.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="CafeDatabaseDataSet1.xss">
-      <DependentUpon>CafeDatabaseDataSet1.xsd</DependentUpon>
-    </None>
     <None Include="CafesData.json" />
-    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

@@ -2139,7 +2139,7 @@ namespace CafeApplication
             login_panel.Visible = true;
             user_panel.Visible = false;
             cafe_panel.Visible = false;
-            User.users.ToString();
+            User.LoadUsers();
         }
 
         private void CafeApp_Load(object sender, EventArgs e)

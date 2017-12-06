@@ -1,3 +1,9 @@
 CafeApp/bin/
 CafeApp/obj/
 CafeApp/obj/
+/.vs/CafeApplication/v15/Server/sqlite3
+/.vs/CafeApplication/v15/.suo
+/CafeApp/CafeDatabaseDataSet.xss
+/CafeApp/CafeDatabaseDataSet.xsd
+/CafeApp/CafeDatabaseDataSet.xsc
+/CafeApp/CafeDatabaseDataSet.Designer.cs
