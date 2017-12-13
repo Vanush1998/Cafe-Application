@@ -72,7 +72,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ActiveUser.cs" />
     <Compile Include="Cafe.cs" />
     <Compile Include="CafeApp.cs">
       <SubType>Form</SubType>

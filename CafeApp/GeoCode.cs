@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Device.Location;
+using System.Data.SqlClient;
 
 namespace CafeApplication
 {
@@ -14,7 +12,7 @@ namespace CafeApplication
         {
             var address = String.Format("http://maps.google.com/maps/api/geocode/json?address={0}&sensor=false", Address.Replace(" ", "+"));
             var result = new System.Net.WebClient().DownloadString(address);
-            return new GeoCoordinate(JsonConvert.DeserializeObject<RootObject>(result).results[0].geometry.location.lat,JsonConvert.DeserializeObject<RootObject>(result).results[0].geometry.location.lng);
+            return new GeoCoordinate(JsonConvert.DeserializeObject<RootObject>(result).results[0].geometry.location.lat, JsonConvert.DeserializeObject<RootObject>(result).results[0].geometry.location.lng);
         }
         public static string GetFormattedAddress(String Address)
         {
@@ -38,8 +36,23 @@ namespace CafeApplication
 
     public class Location
     {
+        public string addressName { get; set; }
         public double lat { get; set; }
         public double lng { get; set; }
+        public static int InsertLocation(double lat, double lng, string addressName)
+        {
+            string queryString = String.Format
+                ("exec dbo.UDSP_InsertLocation @latitude = {0}, @longitude = {1},@addressName = {2}", lat, lng, addressName);
+            SqlCommand command = new SqlCommand(
+            queryString, DbConnection.GetConnection());
+            SqlDataReader reader = command.ExecuteReader();
+            int insertedLocationId = 0;
+            while (reader.Read())
+            {
+                insertedLocationId = reader.GetInt32(0);
+            }
+            return insertedLocationId;
+        }
     }
 
     public class Geometry

@@ -1,16 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Runtime.Serialization.Json;
-using System.IO;
-using Newtonsoft.Json;
-using System.Threading;
 using System.Media;
 using System.Device.Location;
 
@@ -19,7 +11,8 @@ namespace CafeApplication
     public partial class CafeApp : Form
     {
         #region Variables
-        ActiveUser activeUser = null;
+        User activeUser = null;
+        GeoCoordinate activeUserLocation = null;
         Cafe activeCafe = null;
         KeyValuePair<string, int> activeItem;
         List<Label> MenuLabels = new List<Label>();
@@ -66,6 +59,7 @@ namespace CafeApplication
             passwordBox_sign_up_panel.ForeColor = Color.Silver;
             warning_label_sign_in_panel.Visible = false;
             warning_label_sign_up_panel.Visible = false;
+            User.LoadUsers();
         }
 
         private void InitialStateForUserPanel()
@@ -239,7 +233,7 @@ namespace CafeApplication
                         popular_cafe5_user_page_panel.Visible = true;
                     }
                 }
-                if (activeUser.Location == null)
+                if (activeUserLocation == null)
                     near_cafes_panel_user_page_panel.Visible = false;
                 else
                     near_cafes_panel_user_page_panel.Visible = true;
@@ -247,12 +241,12 @@ namespace CafeApplication
         }
         private void InitialStateForNearCafesPanel()
         {
-            if (activeUser.Location == null)
+            if (activeUserLocation == null)
                 near_cafes_panel_user_page_panel.Visible = false;
             else
             {
                 near_cafes_panel_user_page_panel.Visible = true;
-                Cafe.SortByDistance(activeUser); //////// yst active useric unecac heravorutyan
+                Cafe.SortByDistance(activeUserLocation); //////// yst active useric unecac heravorutyan
                 for (int i = 0; i < Cafe.cafes.Count; i++)
                 {
                     if (i == 0)
@@ -286,100 +280,104 @@ namespace CafeApplication
         }
         private void InitialStateForCafesPanel()
         {
-            worning_label_cafe_panel.Visible = false;
-            activeUser.Bill = 0;
-            activeUser.OrderList.Clear();
-            listBox1.DataSource = new BindingSource();
-            active_user_name_lastname_cafe_panel.Text = activeUser.ToString();
-            heading_label_cafe_panel.Text = activeCafe.Name;
-            address_label_cafe_info_panel.Text = "Address :  " + activeCafe.Address;
-            phone_label_cafe_info_panel.Text = "Phone :    " + activeCafe.Phone;
-            email_label_cafe_info_panel.Text = "Email :    " + activeCafe.Email;
-            web_page__label_cafe_info_panel.Text = "Web page : " + activeCafe.WebPage;
-            worktime_label_cafe_info_panel.Text = activeCafe.OpenStatus() + " / " + activeCafe.Open.ToString(@"hh\:mm") + "-" + activeCafe.Close.ToString(@"hh\:mm") + "\n" + "Workdays : ";
-            if (activeCafe.WorkDays[0])
-                worktime_label_cafe_info_panel.Text += " M";
-            if (activeCafe.WorkDays[1])
-                worktime_label_cafe_info_panel.Text += " T";
-            if (activeCafe.WorkDays[2])
-                worktime_label_cafe_info_panel.Text += " W";
-            if (activeCafe.WorkDays[3])
-                worktime_label_cafe_info_panel.Text += " T";
-            if (activeCafe.WorkDays[4])
-                worktime_label_cafe_info_panel.Text += " F";
-            if (activeCafe.WorkDays[5])
-                worktime_label_cafe_info_panel.Text += " S";
-            if (activeCafe.WorkDays[6])
-                worktime_label_cafe_info_panel.Text += " S";
-            rating_label_cafe_info_panel.Text = "Rating " + activeCafe.Rating;
-            InitialStateForRatesAndReviews();
-            MenuLabels.Add(menu_item1_label);
-            MenuLabels.Add(menu_item2_label);
-            MenuLabels.Add(menu_item3_label);
-            MenuLabels.Add(menu_item4_label);
-            MenuLabels.Add(menu_item5_label);
-            MenuLabels.Add(menu_item6_label);
-            MenuLabels.Add(menu_item7_label);
-            MenuLabels.Add(menu_item8_label);
-            MenuLabels.Add(menu_item9_label);
-            MenuCheckBoxes.Add(menu_checkBox1);
-            MenuCheckBoxes.Add(menu_checkBox2);
-            MenuCheckBoxes.Add(menu_checkBox3);
-            MenuCheckBoxes.Add(menu_checkBox4);
-            MenuCheckBoxes.Add(menu_checkBox5);
-            MenuCheckBoxes.Add(menu_checkBox6);
-            MenuCheckBoxes.Add(menu_checkBox7);
-            MenuCheckBoxes.Add(menu_checkBox8);
-            MenuCheckBoxes.Add(menu_checkBox9);
-            MenuNumbers.Add(menu_numericUpDown1);
-            MenuNumbers.Add(menu_numericUpDown2);
-            MenuNumbers.Add(menu_numericUpDown3);
-            MenuNumbers.Add(menu_numericUpDown4);
-            MenuNumbers.Add(menu_numericUpDown5);
-            MenuNumbers.Add(menu_numericUpDown6);
-            MenuNumbers.Add(menu_numericUpDown7);
-            MenuNumbers.Add(menu_numericUpDown8);
-            MenuNumbers.Add(menu_numericUpDown9);
-            InitialStateForMenu(1);
-            if (activeUser.isBlocked)
+            if (activeUser != null)
             {
-                for (int i = 0; i < MenuCheckBoxes.Count; i++)
-                {
-                    MenuCheckBoxes[i].Enabled = false;
-                    MenuNumbers[i].Enabled = false;
-                }
-                orderlist_label_cafe_panel.Enabled = false;
-                listBox1.Enabled = false;
-                bill_label_cafe_panel.Enabled = false;
-                bill_amount_label_cafe_panel.Enabled = false;
-                make_order_button_cafe_panel.Enabled = false;
-            }
-            else
-            {
-                for (int i = 0; i < MenuCheckBoxes.Count; i++)
-                {
-                    MenuCheckBoxes[i].Enabled = true; ;
-                    MenuNumbers[i].Enabled = true;
-                }
-                orderlist_label_cafe_panel.Enabled = true;
-                listBox1.Enabled = true;
-                bill_label_cafe_panel.Enabled = true;
-                bill_amount_label_cafe_panel.Enabled = true;
-                make_order_button_cafe_panel.Enabled = true;
-            }
-            if (activeUser.isAdmin)
-            {
-                delete_cafe_button_cafe_panel.Visible = true;
-                modify_cafe_menu_button.Visible = true;
-                change_cafe_info_button.Visible = true;
-            }
-            else
-            {
-                delete_cafe_button_cafe_panel.Visible = false;
-                modify_cafe_menu_button.Visible = false;
-                change_cafe_info_button.Visible = false;
-            }
+                worning_label_cafe_panel.Visible = false;
 
+                activeUser.Bill = 0;
+                activeUser.OrderList.Clear();
+
+                listBox1.DataSource = new BindingSource();
+                active_user_name_lastname_cafe_panel.Text = activeUser.ToString();
+                heading_label_cafe_panel.Text = activeCafe.Name;
+                address_label_cafe_info_panel.Text = "Address :  " + activeCafe.Address;
+                phone_label_cafe_info_panel.Text = "Phone :    " + activeCafe.Phone;
+                email_label_cafe_info_panel.Text = "Email :    " + activeCafe.Email;
+                web_page__label_cafe_info_panel.Text = "Web page : " + activeCafe.WebPage;
+                worktime_label_cafe_info_panel.Text = activeCafe.OpenStatus() + " / " + activeCafe.Open.ToString(@"hh\:mm") + "-" + activeCafe.Close.ToString(@"hh\:mm") + "\n" + "Workdays : ";
+                if (activeCafe.WorkDays[0])
+                    worktime_label_cafe_info_panel.Text += " M";
+                if (activeCafe.WorkDays[1])
+                    worktime_label_cafe_info_panel.Text += " T";
+                if (activeCafe.WorkDays[2])
+                    worktime_label_cafe_info_panel.Text += " W";
+                if (activeCafe.WorkDays[3])
+                    worktime_label_cafe_info_panel.Text += " T";
+                if (activeCafe.WorkDays[4])
+                    worktime_label_cafe_info_panel.Text += " F";
+                if (activeCafe.WorkDays[5])
+                    worktime_label_cafe_info_panel.Text += " S";
+                if (activeCafe.WorkDays[6])
+                    worktime_label_cafe_info_panel.Text += " S";
+                rating_label_cafe_info_panel.Text = "Rating " + activeCafe.Rating;
+                InitialStateForRatesAndReviews();
+                MenuLabels.Add(menu_item1_label);
+                MenuLabels.Add(menu_item2_label);
+                MenuLabels.Add(menu_item3_label);
+                MenuLabels.Add(menu_item4_label);
+                MenuLabels.Add(menu_item5_label);
+                MenuLabels.Add(menu_item6_label);
+                MenuLabels.Add(menu_item7_label);
+                MenuLabels.Add(menu_item8_label);
+                MenuLabels.Add(menu_item9_label);
+                MenuCheckBoxes.Add(menu_checkBox1);
+                MenuCheckBoxes.Add(menu_checkBox2);
+                MenuCheckBoxes.Add(menu_checkBox3);
+                MenuCheckBoxes.Add(menu_checkBox4);
+                MenuCheckBoxes.Add(menu_checkBox5);
+                MenuCheckBoxes.Add(menu_checkBox6);
+                MenuCheckBoxes.Add(menu_checkBox7);
+                MenuCheckBoxes.Add(menu_checkBox8);
+                MenuCheckBoxes.Add(menu_checkBox9);
+                MenuNumbers.Add(menu_numericUpDown1);
+                MenuNumbers.Add(menu_numericUpDown2);
+                MenuNumbers.Add(menu_numericUpDown3);
+                MenuNumbers.Add(menu_numericUpDown4);
+                MenuNumbers.Add(menu_numericUpDown5);
+                MenuNumbers.Add(menu_numericUpDown6);
+                MenuNumbers.Add(menu_numericUpDown7);
+                MenuNumbers.Add(menu_numericUpDown8);
+                MenuNumbers.Add(menu_numericUpDown9);
+                InitialStateForMenu(1);
+                if (activeUser.isBlocked)
+                {
+                    for (int i = 0; i < MenuCheckBoxes.Count; i++)
+                    {
+                        MenuCheckBoxes[i].Enabled = false;
+                        MenuNumbers[i].Enabled = false;
+                    }
+                    orderlist_label_cafe_panel.Enabled = false;
+                    listBox1.Enabled = false;
+                    bill_label_cafe_panel.Enabled = false;
+                    bill_amount_label_cafe_panel.Enabled = false;
+                    make_order_button_cafe_panel.Enabled = false;
+                }
+                else
+                {
+                    for (int i = 0; i < MenuCheckBoxes.Count; i++)
+                    {
+                        MenuCheckBoxes[i].Enabled = true; ;
+                        MenuNumbers[i].Enabled = true;
+                    }
+                    orderlist_label_cafe_panel.Enabled = true;
+                    listBox1.Enabled = true;
+                    bill_label_cafe_panel.Enabled = true;
+                    bill_amount_label_cafe_panel.Enabled = true;
+                    make_order_button_cafe_panel.Enabled = true;
+                }
+                if (activeUser.isAdmin)
+                {
+                    delete_cafe_button_cafe_panel.Visible = true;
+                    modify_cafe_menu_button.Visible = true;
+                    change_cafe_info_button.Visible = true;
+                }
+                else
+                {
+                    delete_cafe_button_cafe_panel.Visible = false;
+                    modify_cafe_menu_button.Visible = false;
+                    change_cafe_info_button.Visible = false;
+                }
+            }
         }
         private void InitialStateForRatesAndReviews()
         {
@@ -636,7 +634,7 @@ namespace CafeApplication
             }
             try
             {
-                activeUser =(ActiveUser) User.LogIn(usernameBox_sign_in_panel.Text, EncodePassword(passwordBox_sign_in_panel.Text));
+                activeUser = User.LogIn(usernameBox_sign_in_panel.Text, EncodePassword(passwordBox_sign_in_panel.Text));
                 user_panel.Visible = true;
                 login_panel.Visible = false;
                 InitialStateForUserPanel();
@@ -671,22 +669,21 @@ namespace CafeApplication
                 usernameBox_sign_up_panel.Text.Equals("Username") ||
                 passwordBox_sign_up_panel.Text.Equals("Password"))
             {
-                warning_label_sign_up_panel.Text = "Pleas fill up the fields";
+                warning_label_sign_up_panel.Text = "Please fill up the fields";
                 warning_label_sign_up_panel.Visible = true;
                 return;
             }
             try
             {
-
                 User user = new User(nameBox_sign_up_panel.Text, lastnameBox_sign_up_panel.Text, usernameBox_sign_up_panel.Text, EncodePassword(passwordBox_sign_up_panel.Text));
-                activeUser = (ActiveUser)User.LogIn(usernameBox_sign_up_panel.Text, EncodePassword(passwordBox_sign_up_panel.Text));
+                activeUser = User.LogIn(usernameBox_sign_up_panel.Text, EncodePassword(passwordBox_sign_up_panel.Text));
+                User.InsertUser(user.isAdmin, user.adminSetterID, user.isBlocked, user.Bill, user.UserName, user.Password, user.Cash, user.Name, user.LastName);
                 user_name_lastname_label.Text = activeUser.Name + " " + activeUser.LastName;
                 user_panel.Visible = true;
                 login_panel.Visible = false;
                 InitialStateForUserPanel();
                 InitialStateForSignInPanel();
                 SystemSounds.Beep.Play();
-
             }
             catch (ArgumentException exception)
             {
@@ -899,7 +896,7 @@ namespace CafeApplication
             try
             {
                 string address = addressBox_user_panel.Text;
-                activeUser.Location = GeoCode.GEOCodeAddress(address);
+                activeUserLocation = GeoCode.GEOCodeAddress(address);
                 near_cafes_panel_user_page_panel.Visible = true;
                 InitialStateForNearCafesPanel();
                 worning_label_user_page_panel.Text = "Your current location : " + GeoCode.GetFormattedAddress(address);
@@ -1092,19 +1089,17 @@ namespace CafeApplication
                 TimeSpan open, close;
                 try
                 {
-                    close = new TimeSpan(int.Parse(closeH[0]), int.Parse(closeH[1]), int.Parse(closeH[2]));
-                    open = new TimeSpan(int.Parse(openH[0]), int.Parse(openH[1]), int.Parse(openH[2]));
+                    close = new TimeSpan(int.Parse(closeH[0]), int.Parse(closeH[1]), 0);
+                    open = new TimeSpan(int.Parse(openH[0]), int.Parse(openH[1]), 0);
                     if (!(int.Parse(closeH[0]) >= 0 && int.Parse(closeH[0]) <= 24 &&
                         int.Parse(closeH[1]) >= 0 && int.Parse(closeH[1]) <= 60 &&
-                        int.Parse(closeH[2]) >= 0 && int.Parse(closeH[2]) <= 60 &&
                         int.Parse(openH[0]) >= 0 && int.Parse(openH[0]) <= 24 &&
-                        int.Parse(closeH[1]) >= 0 && int.Parse(closeH[1]) <= 60 &&
-                        int.Parse(closeH[2]) >= 0 && int.Parse(closeH[2]) <= 60))
+                        int.Parse(closeH[1]) >= 0 && int.Parse(closeH[1]) <= 60))
                         throw new Exception();
                 }
                 catch
                 {
-                    throw new Exception("Hours must be in hh.mm.ss format");
+                    throw new Exception("Hours must be in hh.mm format");
                 }
                 bool[] workdays = new bool[7];
                 if (checkBox_monday_cafe_page_panel.Checked) workdays[0] = true;
@@ -1115,9 +1110,9 @@ namespace CafeApplication
                 if (checkBox_saturday_cafe_page_panel.Checked) workdays[5] = true;
                 if (checkBox_sunday_cafe_page_panel.Checked) workdays[6] = true;
                 Cafe cafe = new Cafe(name, address, phone, open, close, location, workdays, email, webpage);
+                Cafe.InsertCafe(cafe.Name, cafe.Address, cafe.Phone, cafe.Open, cafe.Close, cafe.Location, cafe.WorkDays, cafe.Email, cafe.WebPage);
                 add_cafe_panel_user_page_panel.Visible = false;
                 InitialStateForUserPagePanel();
-
             }
             catch (Exception exc)
             {
@@ -1179,7 +1174,7 @@ namespace CafeApplication
 
         private void yes_button_delete_user_control_panel_Click(object sender, EventArgs e)
         {
-            User.users.Remove(selectedUserFromCombobox);
+            User.DeleteUser(selectedUserFromCombobox);
             selectedUserFromCombobox = null;
             delete_acc_ask_panel_user_control_panel.Visible = false;
             user_mod_for_admin_panel.Visible = false;
@@ -1226,7 +1221,7 @@ namespace CafeApplication
             {
                 if (NearBy[i] == (Label)sender)
                 {
-                    Cafe.SortByDistance(activeUser); //yst activ eUseric unecac her.
+                    Cafe.SortByDistance(activeUserLocation); //yst activ eUseric unecac her.
                     OpenCafePage(Cafe.cafes[i]);
                 }
             }
@@ -1457,8 +1452,8 @@ namespace CafeApplication
             System.Media.SystemSounds.Asterisk.Play();
             edit_profile_panel.Visible = false;
             user_name_lastname_label.Text = activeUser.Name + " " + activeUser.LastName;
+            User.UpdateUser(activeUser);
             InitialStateForUserPanel();
-
         }
 
         private void delete_account_button_edit_profile_Click(object sender, EventArgs e)
@@ -1480,20 +1475,13 @@ namespace CafeApplication
         }
 
         private void yes_button_account_delete_warning_panel_Click(object sender, EventArgs e)
-        {
-            if (User.users.Remove(activeUser))
-            {
+        {          
+                User.DeleteUser(activeUser);
                 InitialStateForUserPanel();
                 user_panel.Visible = false;
                 login_panel.Visible = true;
                 warning_label_sign_in_panel.Visible = true;
-                warning_label_sign_in_panel.Text = "Account has been succefully deleted";
-            }
-            else
-            {
-                account_delete_warning_panel.Visible = false;
-                warning_label_edit_profile_panel.Text = "Somethong went wrong :(";
-            }
+                warning_label_sign_in_panel.Text = "Account has been succefully deleted";           
         }
         #endregion edit_profile_panel
         #region cash_panel
@@ -1867,8 +1855,7 @@ namespace CafeApplication
                 {
                     MessageBox.Show("Your order has been made");
                     worning_label_cafe_panel.Visible = false;
-                    activeUser.Cash -= activeUser.Bill;
-                    activeUser.Bill = 0;
+                    activeUser.PayBill();
                     activeUser.OrderList.Clear();
                     InitialStateForCafesPanel();
                 }
@@ -2126,20 +2113,20 @@ namespace CafeApplication
 
         public static String EncodePassword(string password)
         {
-            String s = String.Empty;
-            for (int i = 0; i < password.Length; i++)
-                s += (char)(password[i] + 7);
-            return s;
+            //String s = String.Empty;
+            //for (int i = 0; i < password.Length; i++)
+            //    s += (char)(password[i] + 7);
+            return password;
         }
 
         public CafeApp()
         {
-
             InitializeComponent();
             login_panel.Visible = true;
             user_panel.Visible = false;
             cafe_panel.Visible = false;
             User.LoadUsers();
+            Cafe.LoadCafes();
         }
 
         private void CafeApp_Load(object sender, EventArgs e)
@@ -2149,7 +2136,7 @@ namespace CafeApplication
 
         private void CafeApp_FormClosing(object sender, FormClosingEventArgs e)
         {
-           
+
         }
         #endregion Serialization                        
     }

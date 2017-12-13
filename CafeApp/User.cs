@@ -2,11 +2,6 @@
 using System.Data.SqlClient;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Serialization;
-using System.Device.Location;
-using Newtonsoft.Json;
 
 namespace CafeApplication
 {
@@ -31,7 +26,6 @@ namespace CafeApplication
                 this.password = value;
             }
         }
-        [JsonProperty]
         public int adminSetterID;
         public int Cash { get; set; }
         public bool isAdmin;
@@ -40,11 +34,10 @@ namespace CafeApplication
 
         public List<string> Favorite { get; set; }
 
-        public static List<User> users = new List<User>();
+        public static List<User> users;
         static User()
         {
             User.users = new List<User>();
-            User.LoadUsers();
         }
 
         public User(string name, string lastname, string username, string password) : base(name, lastname)
@@ -103,26 +96,18 @@ namespace CafeApplication
             }
             throw new ArgumentException("Wrong username or pssword");
         }
-        //Admin functions
-        public void DeleteUser(string username)
-        {
-            for (int i = 0; i < User.users.Count; i++)
-            {
-                if (username.Equals(User.users[i].UserName))
-                {
-                    User.users.RemoveAt(i);
-                    return;
-                }
-            }
-            throw new ArgumentException("User was not found");
-        }
+
         public void DeletCafe(Cafe cafe)
         {
             this.Favorite.Remove(cafe.Name);
+            string queryString = String.Format("exec UDSP_DeleteCafe {0}", cafe.ID);
+            SqlCommand command = new SqlCommand(
+            queryString, DbConnection.GetConnection());
+            command.ExecuteReader();
             Cafe.cafes.Remove(cafe);
         }
-        // end Admin functions
-        public void PayBill(Cafe cafe)
+        //end Admin functions
+        public void PayBill()
         {
             if (this.Cash < this.Bill)
             {
@@ -131,12 +116,24 @@ namespace CafeApplication
             else
             {
                 this.Cash -= this.Bill;
+                this.Bill = 0;
+                string queryString1 = @"UPDATE dbo.Users SET bill = 0 WHERE userId = " + this.ID;
+                string queryString2 = String.Format(@"UPDATE dbo.Users SET cash = {0} WHERE userId = " + this.ID, this.Cash);
+                SqlCommand command = new SqlCommand(
+                queryString1, DbConnection.GetConnection());
+                command.ExecuteReader();
+                command = new SqlCommand(queryString2, DbConnection.GetConnection());
+                command.ExecuteReader();
                 this.OrderList.Clear();
             }
         }
         public void AddMoney(int money)
         {
             this.Cash += money;
+            string queryString = String.Format(@"UPDATE dbo.Users SET cash = {0} WHERE userId = " + this.ID, this.Cash);
+            SqlCommand command = new SqlCommand(
+            queryString, DbConnection.GetConnection());
+            command.ExecuteReader();
         }
         public override string ToString()
         {
@@ -164,19 +161,78 @@ namespace CafeApplication
                 int cash = reader.GetInt32(7);
                 string name = reader.GetString(8);
                 string lastname = reader.GetString(9);
-                loadedUsers.Add(new User(
-                    userId,
+                queryString = "exec UDSP_SelectFavorites " + userId;
+                command = new SqlCommand(
+                queryString, DbConnection.GetConnection());
+                SqlDataReader reader1 = command.ExecuteReader();
+                User user = new User(userId,
                     isAdmin,
                     adminSetter,
                     isBlocked,
                     bill,
                     username,
                     password,
-                   cash,
+                    cash,
                     name,
-                    lastname));
+                    lastname);
+                user.Favorite = new List<string>();
+                while (reader1.Read())
+                {
+                    user.Favorite.Add(reader1.GetString(0));
+                }
+                loadedUsers.Add(user);
             }
             User.users = loadedUsers;
+        }
+        public static int InsertUser(bool isAdmin, int adminSetterId,
+            bool isBlocked, int bill, string username, string password,
+            int cash, string name, string lastName)
+        {
+            string queryString = String.Format(@"EXEC dbo.UDSP_InsertUser @name = {0},
+                                                        @lastName = {1}, 
+                                                        @userName = {2}, 
+                                                        @password = {3}, 
+                                                        @cash = {4}, 
+                                                        @bill = {5}, 
+                                                        @isAdmin = {6}, 
+                                                        @adminSetterId = {7}, 
+                                                        @isBlocked = {8} ",
+                                                        name,
+                                                        lastName,
+                                                        username,
+                                                        password,
+                                                        cash,
+                                                        bill,
+                                                        isAdmin,
+                                                        adminSetterId,
+                                                        isBlocked);
+            SqlCommand command = new SqlCommand(
+            queryString, DbConnection.GetConnection());
+            SqlDataReader reader = command.ExecuteReader();
+            int userId = 0;
+            while (reader.Read())
+            {
+                userId = reader.GetInt32(0);
+            }
+            return userId;
+        }
+        public static void UpdateUser(User user)
+        {
+
+        }
+        public static void DeleteUser(User user)
+        {
+            if (User.users.Remove(user))
+            {
+                string queryString = String.Format("exec UDSP_DeleteUser {0}", user.ID);
+                SqlCommand command = new SqlCommand(
+                queryString, DbConnection.GetConnection());
+                SqlDataReader reader = command.ExecuteReader();
+            }
+            else
+            {
+                throw new ArgumentException("User was not found");            
+            }
         }
     }
 }
