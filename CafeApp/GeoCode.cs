@@ -42,7 +42,7 @@ namespace CafeApplication
         public static int InsertLocation(double lat, double lng, string addressName)
         {
             string queryString = String.Format
-                ("exec dbo.UDSP_InsertLocation @latitude = {0}, @longitude = {1},@addressName = {2}", lat, lng, addressName);
+                ("exec dbo.UDSP_InsertLocation @latitude = {0}, @longitude = {1},@addressName = '{2}'", lat, lng, addressName);
             SqlCommand command = new SqlCommand(
             queryString, DbConnection.GetConnection());
             SqlDataReader reader = command.ExecuteReader();

@@ -35,7 +35,6 @@ namespace CafeApplication
             Rating = 5;
             this.WorkDays = new bool[6];
             Menu = new Dictionary<string, int>();
-            this.AddDefaultMenu();
             this.Location = location;
             this.Email = email;
             this.WebPage = webpage;
@@ -61,22 +60,6 @@ namespace CafeApplication
         public string Email { get; set; }
         public string WebPage { get; set; }
         public double Rating { get; set; }
-        private void AddDefaultMenu()
-        {
-            Menu.Add("Salad Cesar", 850);
-            Menu.Add("Salad with meat", 900);
-            Menu.Add("Pizza", 3500);
-            Menu.Add("Mohito", 2500);
-            Menu.Add("Cake", 1600);
-            Menu.Add("Wine", 2000);
-            Menu.Add("Sushi", 8000);
-            Menu.Add("Juce", 600);
-            Menu.Add("Hot chocolatte", 700);
-            Menu.Add("Ice latte", 600);
-            Menu.Add("Whiskey", 1200);
-            Menu.Add("Fri", 500);
-            Menu.Add("Steak", 2000);
-        }
         public void Rate()
         {
             int sum = 0;
@@ -91,6 +74,11 @@ namespace CafeApplication
             else
                 return "Close now";
         }
+        public override string ToString()
+        {
+            return string.Format("Cafe {0}\nAdress {1}\nOpen status: {2}   {3} - {4}\nRating {5}", Name, Address, OpenStatus(), Open, Close, Rating);
+        }
+
         public static void SortByRate()
         {
             cafes.Sort(delegate (Cafe c1, Cafe c2)
@@ -161,7 +149,7 @@ namespace CafeApplication
                 string phone = reader.GetString(5);
                 string email = reader.GetString(6);
                 string webPage = reader.GetString(7);
-                
+
                 //reading locations 
                 queryString = @"SELECT  longitude, latitude, addressName
                                 FROM    dbo.Locations
@@ -257,12 +245,83 @@ namespace CafeApplication
                 Cafe cafe = new Cafe(name, addressName, phone,
                     open, close, location,
                     workDays, email, webPage);
+                cafe.ID = id;
                 cafe.Menu = menu;
                 cafe.Rates = rates;
                 cafe.Reviews = reviews;
                 loadedCafes.Add(cafe);
             }
             Cafe.cafes = loadedCafes;
+        }
+        public static void InsertReview(Cafe cafe, User user, String review)
+        {
+            cafe.Reviews.Insert(0, user.UserName + ": " + review);
+            string queryString = String.Format(@"INSERT  INTO dbo.Reviews
+                                        ( userId, cafeId, review )
+                                VALUES  ( {0}, {1}, '{2}' )", user.ID, cafe.ID, review);
+            SqlCommand command = new SqlCommand(
+            queryString, DbConnection.GetConnection());
+            SqlDataReader menuReader = command.ExecuteReader();
+        }
+
+        public static void UpdateCafe(Cafe cafe)
+        {
+            int insertedLocationId =
+                CafeApplication.Location.InsertLocation
+                (cafe.Location.Latitude, cafe.Location.Longitude, cafe.Address);
+            string queryString = String.Format(
+               @"EXEC dbo.UDSP_UpdateCafe   @id = {0},
+                                            @name = '{1}', 
+                                            @phone = '{2}', 
+                                            @email = '{3}', 
+                                            @webPage = '{4}', 
+                                            @locationId = {5}, 
+                                            @openTime = '{6}', 
+                                            @closeTime = '{7}'",
+               cafe.ID,
+               cafe.Name,
+               cafe.Phone,
+               cafe.Email,
+               cafe.WebPage,
+               insertedLocationId,
+               cafe.Open.ToString(@"hh\:mm"),
+               cafe.Close.ToString(@"hh\:mm"));
+            SqlCommand command = new SqlCommand(
+            queryString, DbConnection.GetConnection());
+            SqlDataReader menuReader = command.ExecuteReader();
+        }
+
+        public static void UpdateMenu(Cafe cafe, string oldFoodname, string newFoodName, int newPrice)
+        {
+            string queryString = String.Format(
+               @"UPDATE dbo.Foods 
+                    SET foodName = '{0}' , price = {1} 
+                    WHERE cafeId = {2} AND foodName = '{3}'", newFoodName, newPrice, cafe.ID, oldFoodname);
+            SqlCommand command = new SqlCommand(
+            queryString, DbConnection.GetConnection());
+            SqlDataReader menuReader = command.ExecuteReader();
+        }
+
+        public static void AddFoodToMenu(Cafe cafe, string foodName, int price)
+        {
+            string queryString = String.Format(
+              @"INSERT  dbo.Foods
+                    ( cafeId, foodName, price )
+            VALUES  ( {0}, '{1}', {2} )", cafe.ID, foodName, price);
+            SqlCommand command = new SqlCommand(
+            queryString, DbConnection.GetConnection());
+            SqlDataReader menuReader = command.ExecuteReader();
+        }
+        public static void UpsertRate(Cafe cafe, User user, int rate, char insertOrUpdate)
+        {
+            string queryString = String.Format(
+                @"EXEC dbo.UDSP_UpsertRate @userId = {0},
+              @cafeId = {1}, 
+              @rate = {2}, 
+              @insertOrUpdate = '{3}'", user.ID, cafe.ID, rate, insertOrUpdate);
+            SqlCommand command = new SqlCommand(
+            queryString, DbConnection.GetConnection());
+            SqlDataReader menuReader = command.ExecuteReader();
         }
     }
 }

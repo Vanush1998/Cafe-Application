@@ -549,7 +549,6 @@ namespace CafeApplication
             if (e.KeyCode == Keys.Enter)
             {
                 MessageBox.Show(combobox_login_panel.SelectedValue.ToString());
-                OpenCafePage((Cafe)combobox_login_panel.SelectedValue);
             }
         }
         #endregion self_functions
@@ -813,6 +812,7 @@ namespace CafeApplication
             if (!selectedUserFromCombobox.isAdmin)
             {
                 selectedUserFromCombobox.isAdmin = true;
+                User.UpdateUser(selectedUserFromCombobox);
                 make_admin_button_user_mod_for_admin_panel.Text = "Make user";
                 MessageBox.Show(String.Format("You made {0} {1} admin", selectedUserFromCombobox.Name, selectedUserFromCombobox.LastName));
 
@@ -820,6 +820,7 @@ namespace CafeApplication
             else
             {
                 selectedUserFromCombobox.isAdmin = false;
+                User.UpdateUser(selectedUserFromCombobox);
                 make_admin_button_user_mod_for_admin_panel.Text = "Make admin";
                 MessageBox.Show(String.Format("You made {0} {1} user", selectedUserFromCombobox.Name, selectedUserFromCombobox.LastName));
                 selectedUserFromCombobox.adminSetterID = 0;
@@ -840,12 +841,14 @@ namespace CafeApplication
             if (selectedUserFromCombobox.isBlocked)
             {
                 selectedUserFromCombobox.isBlocked = false;
+                User.UpdateUser(selectedUserFromCombobox);
                 block_button_user_mod_for_admin_panel.Text = "Block";
                 block_button_user_mod_for_admin_panel.ForeColor = Color.Maroon;
             }
             else
             {
                 selectedUserFromCombobox.isBlocked = true;
+                User.UpdateUser(selectedUserFromCombobox);
                 block_button_user_mod_for_admin_panel.Text = "Unblock";
                 block_button_user_mod_for_admin_panel.ForeColor = Color.Azure;
             }
@@ -930,7 +933,7 @@ namespace CafeApplication
             comboBox_cafe_search_user_panel.Text = String.Empty;
             comboBox_cafe_search_user_panel.ForeColor = Color.Black;
             var dictionary = new Dictionary<string, Cafe>();
-            dictionary.Add("", new Cafe());
+            dictionary.Add("", null);
             for (int i = 0; i < Cafe.cafes.Count; i++)
                 dictionary.Add(Cafe.cafes[i].Name, Cafe.cafes[i]);
             comboBox_cafe_search_user_panel.DataSource = new BindingSource(dictionary, null);
@@ -1111,6 +1114,7 @@ namespace CafeApplication
                 if (checkBox_sunday_cafe_page_panel.Checked) workdays[6] = true;
                 Cafe cafe = new Cafe(name, address, phone, open, close, location, workdays, email, webpage);
                 Cafe.InsertCafe(cafe.Name, cafe.Address, cafe.Phone, cafe.Open, cafe.Close, cafe.Location, cafe.WorkDays, cafe.Email, cafe.WebPage);
+                Cafe.cafes.Add(cafe);
                 add_cafe_panel_user_page_panel.Visible = false;
                 InitialStateForUserPagePanel();
             }
@@ -1337,6 +1341,7 @@ namespace CafeApplication
                         try
                         {
                             activeUser.Password = EncodePassword(newPasswordBox_change_password_panel.Text);
+                            User.UpdateUser(activeUser);
                             change_password_panel.Visible = false;
                             InitialStateForPasswordChangePanel();
                             SystemSounds.Beep.Play();
@@ -1433,7 +1438,6 @@ namespace CafeApplication
         private void save_button_edit_profile_Click(object sender, EventArgs e)
         {
 
-
             if (usernameBox_edit_profile.Text != activeUser.UserName)
             {
                 for (int i = 0; i < User.users.Count; i++)
@@ -1475,13 +1479,13 @@ namespace CafeApplication
         }
 
         private void yes_button_account_delete_warning_panel_Click(object sender, EventArgs e)
-        {          
-                User.DeleteUser(activeUser);
-                InitialStateForUserPanel();
-                user_panel.Visible = false;
-                login_panel.Visible = true;
-                warning_label_sign_in_panel.Visible = true;
-                warning_label_sign_in_panel.Text = "Account has been succefully deleted";           
+        {
+            User.DeleteUser(activeUser);
+            InitialStateForUserPanel();
+            user_panel.Visible = false;
+            login_panel.Visible = true;
+            warning_label_sign_in_panel.Visible = true;
+            warning_label_sign_in_panel.Text = "Account has been succefully deleted";
         }
         #endregion edit_profile_panel
         #region cash_panel
@@ -1632,7 +1636,7 @@ namespace CafeApplication
             {
                 if (!add_reviewBox_cafe_info_panel.Text.Equals(""))
                 {
-                    activeCafe.Reviews.Insert(0, activeUser.UserName + ": " + add_reviewBox_cafe_info_panel.Text);
+                    Cafe.InsertReview(activeCafe, activeUser, add_reviewBox_cafe_info_panel.Text);
                     add_reviewBox_cafe_info_panel.Text = "";
                     for (int i = 0; i < activeCafe.Reviews.Count; i++)
                     {
@@ -1719,6 +1723,7 @@ namespace CafeApplication
             if (activeCafe.Rates.ContainsKey(activeUser.ID))
             {
                 activeCafe.Rates[activeUser.ID] = 1;
+                Cafe.UpsertRate(activeCafe, activeUser, 1, 'U');
                 already_rated_label_cafe_info_panel.Text = "Rate updated";
                 activeUser.Favorite.Remove(activeCafe.Name);
                 SystemSounds.Beep.Play();
@@ -1726,6 +1731,7 @@ namespace CafeApplication
             else
             {
                 activeCafe.Rates.Add(activeUser.ID, 1);
+                Cafe.UpsertRate(activeCafe, activeUser, 1, 'I');
                 already_rated_label_cafe_info_panel.Text = "Rated";
                 SystemSounds.Beep.Play();
             }
@@ -1736,14 +1742,16 @@ namespace CafeApplication
         {
             if (activeCafe.Rates.ContainsKey(activeUser.ID))
             {
-                activeCafe.Rates[activeUser.ID] = 1;
+                activeCafe.Rates[activeUser.ID] = 2;
+                Cafe.UpsertRate(activeCafe, activeUser, 2, 'U');
                 already_rated_label_cafe_info_panel.Text = "Rate updated";
                 activeUser.Favorite.Remove(activeCafe.Name);
                 SystemSounds.Beep.Play();
             }
             else
             {
-                activeCafe.Rates.Add(activeUser.ID, 1);
+                activeCafe.Rates.Add(activeUser.ID, 2);
+                Cafe.UpsertRate(activeCafe, activeUser, 2, 'I');
                 already_rated_label_cafe_info_panel.Text = "Rated";
                 SystemSounds.Beep.Play();
             }
@@ -1755,6 +1763,7 @@ namespace CafeApplication
             if (activeCafe.Rates.ContainsKey(activeUser.ID))
             {
                 activeCafe.Rates[activeUser.ID] = 3;
+                Cafe.UpsertRate(activeCafe, activeUser, 3, 'U');
                 already_rated_label_cafe_info_panel.Text = "Rate updated";
                 activeUser.Favorite.Remove(activeCafe.Name);
                 SystemSounds.Beep.Play();
@@ -1762,6 +1771,7 @@ namespace CafeApplication
             else
             {
                 activeCafe.Rates.Add(activeUser.ID, 3);
+                Cafe.UpsertRate(activeCafe, activeUser, 3, 'I');
                 already_rated_label_cafe_info_panel.Text = "Rated";
                 SystemSounds.Beep.Play();
             }
@@ -1773,6 +1783,7 @@ namespace CafeApplication
             if (activeCafe.Rates.ContainsKey(activeUser.ID))
             {
                 activeCafe.Rates[activeUser.ID] = 4;
+                Cafe.UpsertRate(activeCafe, activeUser, 4, 'U');
                 already_rated_label_cafe_info_panel.Text = "Rate updated";
                 if (!activeUser.Favorite.Contains(activeCafe.Name))
                     activeUser.Favorite.Insert(0, activeCafe.Name);
@@ -1781,6 +1792,7 @@ namespace CafeApplication
             else
             {
                 activeCafe.Rates.Add(activeUser.ID, 4);
+                Cafe.UpsertRate(activeCafe, activeUser, 4, 'I');
                 already_rated_label_cafe_info_panel.Text = "Rated";
                 activeUser.Favorite.Insert(0, activeCafe.Name);
                 SystemSounds.Beep.Play();
@@ -1793,6 +1805,7 @@ namespace CafeApplication
             if (activeCafe.Rates.ContainsKey(activeUser.ID))
             {
                 activeCafe.Rates[activeUser.ID] = 5;
+                Cafe.UpsertRate(activeCafe, activeUser, 5, 'U');
                 already_rated_label_cafe_info_panel.Text = "Rate updated";
                 if (!activeUser.Favorite.Contains(activeCafe.Name))
                     activeUser.Favorite.Insert(0, activeCafe.Name);
@@ -1801,6 +1814,7 @@ namespace CafeApplication
             else
             {
                 activeCafe.Rates.Add(activeUser.ID, 5);
+                Cafe.UpsertRate(activeCafe, activeUser, 5, 'I');
                 already_rated_label_cafe_info_panel.Text = "Rated";
                 activeUser.Favorite.Insert(0, activeCafe.Name);
                 SystemSounds.Beep.Play();
@@ -1930,10 +1944,12 @@ namespace CafeApplication
                     return;
                 }
                 int.Parse(priceBox_modify_menu_panel.Text);
+                Cafe.UpdateMenu(activeCafe, activeItem.Key, nameBox_modify_menu_panel.Text, int.Parse(priceBox_modify_menu_panel.Text));
                 activeCafe.Menu.Remove(activeItem.Key);
                 activeCafe.Menu.Add(nameBox_modify_menu_panel.Text, int.Parse(priceBox_modify_menu_panel.Text));
                 modify_menu_panel.Visible = false;
                 mod_panel_modify_menu_panel.Visible = false;
+
                 InitialStateForMenu(pageCount);
             }
             catch (FormatException)
@@ -1984,6 +2000,7 @@ namespace CafeApplication
             try
             {
                 activeCafe.Menu.Add(nameBox_new_item_modify_menu_panel.Text, int.Parse(priceBox_new_item_modify_menu_panel.Text));
+                Cafe.AddFoodToMenu(activeCafe, nameBox_new_item_modify_menu_panel.Text, int.Parse(priceBox_new_item_modify_menu_panel.Text));
                 InitialStateForMenu(pageCount);
                 warning_label_modify_menu_panel.Visible = false;
                 mod_panel_modify_menu_panel.Visible = false;
@@ -2036,6 +2053,7 @@ namespace CafeApplication
                 String.IsNullOrEmpty(openTimeBox_change_info_panel.Text))
             {
                 warning_label_change_info_panel.Text = "Please fill up the fields";
+                return;
             }
             try
             {
@@ -2069,6 +2087,7 @@ namespace CafeApplication
             {
                 warning_label_change_info_panel.Text = v.Message;
                 warning_label_change_info_panel.Visible = true;
+                return;
             }
             List<CheckBox> change_info_chechboxes = new List<CheckBox>();
             change_info_chechboxes.Add(checkBox1_change_info_panel);
@@ -2083,6 +2102,7 @@ namespace CafeApplication
                 if (change_info_chechboxes[i].Checked)
                     activeCafe.WorkDays[i] = true;
             }
+            Cafe.UpdateCafe(activeCafe);
 
         }
         private void cancel_button_change_info_panel_Click(object sender, EventArgs e)

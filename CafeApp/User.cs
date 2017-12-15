@@ -64,7 +64,6 @@ namespace CafeApplication
             this.UserName = username;
             this.Password = password;
             this.Bill = 0;
-
         }
         public User() { }
         private User(int userId, bool isAdmin, int adminSetterId,
@@ -82,7 +81,6 @@ namespace CafeApplication
             this.Name = name;
             this.LastName = lastName;
         }
-
 
         public static User LogIn(string username, string password)
         {
@@ -216,23 +214,44 @@ namespace CafeApplication
             }
             return userId;
         }
+
         public static void UpdateUser(User user)
         {
-
+            string queryString = String.Format(
+            @"EXEC dbo.UDSP_UpdateUser  @id = {0}, 
+                                        @name = '{1}', 
+                                        @lastname = '{2}',
+                                        @username = '{3}', 
+                                        @password = '{4}', 
+                                        @isAdmin = {5}, 
+                                        @isBlocked = {6}, 
+                                        @adminSetterId = {7},
+                                        @cash = {8}, 
+                                        @bill = {9}",
+            user.ID, user.Name,
+            user.LastName, user.UserName, user.Password,
+            user.isAdmin, user.isBlocked,
+            user.adminSetterID, user.Cash,
+            user.Bill);
+            SqlCommand command = new SqlCommand(
+            queryString, DbConnection.GetConnection());
+            SqlDataReader reader = command.ExecuteReader();
         }
+
         public static void DeleteUser(User user)
         {
-            if (User.users.Remove(user))
+            for (int i = 0; i < User.users.Capacity; i++)
             {
-                string queryString = String.Format("exec UDSP_DeleteUser {0}", user.ID);
-                SqlCommand command = new SqlCommand(
-                queryString, DbConnection.GetConnection());
-                SqlDataReader reader = command.ExecuteReader();
+                if (User.users[i].ID == user.ID)
+                {
+                    string queryString = String.Format("exec UDSP_DeleteUser {0}", user.ID);
+                    SqlCommand command = new SqlCommand(
+                    queryString, DbConnection.GetConnection());
+                    SqlDataReader reader = command.ExecuteReader();
+                    return;
+                }
             }
-            else
-            {
-                throw new ArgumentException("User was not found");            
-            }
+            throw new ArgumentException("User was not found");
         }
     }
 }
